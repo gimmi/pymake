@@ -1,11 +1,11 @@
 cfg = {
   'server': '.\SQLEXPRESS',
-	'group': 'test',
-	'task': 'migrate',
-	'groups': {
-		'test': [ 'ADOUtilsTests' ],
-		'group2': [ 'db1', 'db2', 'db3' ]
-	}
+  'group': 'test',
+  'task': 'migrate',
+  'groups': {
+    'test': [ 'ADOUtilsTests' ],
+    'group2': [ 'db1', 'db2', 'db3' ]
+  }
 }
 
 import subprocess
