@@ -1,62 +1,104 @@
+import os, glob, shutil, subprocess, buildutil
+
 cfg = {
-  'server': '.\SQLEXPRESS',
-	'group': 'test',
-	'task': 'migrate',
-	'groups': {
-		'test': [ 'ADOUtilsTests' ],
-		'group2': [ 'db1', 'db2', 'db3' ]
-	}
+  'tasks': ['init', 'install_deps', 'assembly_info'],
+	'framework_version': '4.0.30319',
+	'build_configuration': 'Release',
+	'project_version': '3.0.0',
+	'prerelease_tag': 'b',
+	'build_number': '0',
+	'nuget_package_source': 'https://nuget.org/api/v2/'
 }
 
-import subprocess
+def init():
+	cfg['base_path'] = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+	cfg['nuget_exe'] = os.path.join(cfg['base_path'], 'tools', 'NuGet.exe')
 
-def drop_dbs():
-	pass
+	cfg['nuget_version'] = cfg['project_version']
+	if cfg['prerelease_tag']:
+		cfg['nuget_version'] += '-' + cfg['prerelease_tag'] + cfg['build_number'].rjust(6, '0')
 
-def create_dbs():
-	pass
+	cfg['assembly_version'] = cfg['project_version'] + '.0'
 
-def migrate():
-	exec_sql('SELECT GETDATE()')
+	cfg['out_path'] = os.path.join(cfg['base_path'], 'out')
 
-def script():
-	print('executing ' + cfg['task'])
+	buildutil.dump_cfg()
 
-def exec_sql(sql, server=None, database=None):
-	server = server or cfg['server']
-	group = cfg['group']
-	database = database or cfg['groups'][group][0]
+def install_deps():
+	subprocess.check_call([cfg['nuget_exe'], 'install', 'NUnit.Runners', '-Version', '2.6.2', '-ExcludeVersion', '-OutputDirectory', os.path.join(cfg['base_path'], 'tools'), '-Source', cfg['nuget_package_source']])
+
+	for pkg_cfg in glob.glob('src/*/packages.config'):
+		subprocess.check_call([
+			cfg['nuget_exe'],
+			'install', pkg_cfg,
+			'-OutputDirectory', os.path.join(cfg['base_path'], 'src', 'packages'),
+			'-Source', cfg['nuget_package_source']
+		])
+
+def assembly_info():
+	shared_assembly_info = """\
+[assembly: System.Reflection.AssemblyProduct("ProductName")]
+[assembly: System.Reflection.AssemblyCopyright("")]
+[assembly: System.Reflection.AssemblyTrademark("")]
+[assembly: System.Reflection.AssemblyCompany("")]
+[assembly: System.Reflection.AssemblyConfiguration("{build_configuration}")]
+[assembly: System.Reflection.AssemblyVersion("{assembly_version}")]
+[assembly: System.Reflection.AssemblyFileVersion("{assembly_version}")]
+[assembly: System.Reflection.AssemblyInformationalVersion("{nuget_version}")]
+	""".format(**cfg)
+
+	with open(os.path.join(cfg['base_path'], 'src', 'SharedAssemblyInfo.cs'), 'w') as f:
+		f.write(shared_assembly_info)
+
+def compile():
+	msbuild_path = os.path.join(os.environ['SystemRoot'], 'Microsoft.NET', 'Framework', 'v' + cfg['framework_version'], 'MSBuild.exe')
 	subprocess.check_call([
-		'sqlcmd.exe', '-E',
-		'-S', server,
-		'-d', database,
-		'-h', '-1',
-		'-Q', sql
+		msbuild_path, '/verbosity:minimal', '/nologo', 
+		os.path.join(cfg['base_path'], 'src', 'Product.sln'), 
+		'/t:Rebuild',
+		'/p:Configuration=' + cfg['build_configuration'] +';Platform=Any CPU'
 	])
 
+def test():
+	nunit_command = [
+		os.path.join(cfg['base_path'],'tools','NUnit.Runners','tools','nunit-console.exe'),
+		'/nologo' ,
+		'/noresult' ,
+		'/framework=' + cfg['framework_version']
+	]
+
+	nunit_command.extend(glob.glob('src/*/bin/' + cfg['build_configuration'] +'/*.Tests.dll'))
+
+	subprocess.check_call(nunit_command)
+
+def pack():
+	if os.path.exists(cfg['out_path']): shutil.rmtree(cfg['out_path'])
+
+	shutil.copytree(os.path.join(cfg['base_path'], 'src', 'ProductName', 'bin', cfg['build_configuration']), os.path.join(cfg['out_path'], 'nupkg', 'lib', 'net40'))
+
+	nuspec_content = """\
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>DaqFiles</id>
+    <version>{nuget_version}</version>
+    <authors>Gerri</authors>
+    <owners>Gerri</owners>
+    <description>something wrong</description>
+  </metadata>
+</package>
+	""".format(**cfg)
+
+	nuspec_file = os.path.join(cfg['out_path'], 'nupkg', 'Package.nuspec')
+
+	with open(nuspec_file, 'w') as f:
+		f.write(nuspec_content)
+
+	subprocess.check_call([cfg['nuget_exe'], 'pack', nuspec_file, '-Symbols', '-OutputDirectory', cfg['out_path']])
+
+def publish():
+	nupkg_file = os.path.join(cfg['out_path'], 'DaqFiles.' + cfg['nuget_version'] + '.nupkg')
+	subprocess.check_call([cfg['nuget_exe'], 'push', nupkg_file, '-Source', cfg['nuget_package_source']])
+
 if __name__ == '__main__':
-	import optparse, inspect
-
-	main_module = __import__('__main__')
-
-	valid_tasks = [x[0] for x  in inspect.getmembers(main_module, inspect.isfunction)]
-	valid_groups = cfg['groups'].keys()
-
-	parser = optparse.OptionParser('usage: %prog [options] task [task...]')
-	for pname, pvalue, ptype in [(k, cfg[k], type(cfg[k])) for k in cfg]:
-		if ptype == str:
-			parser.add_option('--' + name, dest=name, type='string', default=pvalue, help='String value, default to "%default"')
-		if ptype == int:
-			parser.add_option('--' + name, dest=name, type='int', default=pvalue, help='Numeric value, default to %default')
-
-	parser.add_option("-s", dest="server", help='SQL Server instance. Default to %default')
-	parser.add_option("-g", dest="group", help='Group name. Default to %default, valid values are ' + ', '.join(valid_groups))
-	parser.add_option("-t", dest="task", help='Task name. Default to %default, valid values are ' + ', '.join(valid_tasks))
-	(options, args) = parser.parse_args()
-	cfg.update(options.__dict__)
-
-	print(cfg)
-
-	task = getattr(main_module, options.task)
-	print('ececuting task ' + options.task)
-	task()
+	buildutil.main()
