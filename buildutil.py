@@ -49,13 +49,3 @@ def dump_cfg():
 	for name in names:
 		cprint(name.rjust(pad) + ': ', 'White', '')
 		print(getattr(build_module, name))
-
-def load_module_file(module_path):
-	module_path = os.path.realpath(module_path)
-
-	module_dir, module_file = os.path.split(module_path)
-	module_name = os.path.splitext(module_file)[0]
-
-	sys.path.insert(0, module_dir)
-
-	return __import__(module_name)
