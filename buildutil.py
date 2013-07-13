@@ -1,14 +1,15 @@
-import sys, traceback, System
+import inspect, sys, traceback, System
 
 def main():
-  try:
-		main_module = get_main_module()
+	try:
+		build_module = get_main_module()
+		args = sys.argv[1:]
 
-		merge_args(main_module.cfg, sys.argv[1:])
+		tasks = parse_args(build_module, args)
 
-		for task in main_module.cfg['tasks']:
+		for task in tasks:
 			cprint('Executing %s' % task, 'Cyan')
-			task_fn = getattr(main_module, task)
+			task_fn = getattr(build_module, task)
 			task_fn()
 		cprint('\nBuild Succeeded!', 'Green')
 	except:
@@ -19,29 +20,42 @@ def main():
 def get_main_module():
 	return __import__('__main__')
 
-def merge_args(args, commandline_args):
+def parse_args(build_module, args):
 	arg_name = None
-	for arg in commandline_args:
+	tasks = []
+	for arg in args:
 		if arg.startswith('--'):
 			arg_name = arg[2:]
-		elif arg_name in args and type(args[arg_name]) == list:
-			args[arg_name].append(arg)
-		elif arg_name in args:
-			args[arg_name] = arg
+		elif arg_name:
+			setattr(build_module, arg_name, arg)
+			arg_name = None
+		else:
+			tasks.append(arg)
+	return tasks
 
-def cprint(message, fg=None):
-	if fg: System.Console.ForegroundColor = getattr(System.ConsoleColor, fg)
-	print(message)
+def cprint(message, fg, end='\n'):
+	System.Console.ForegroundColor = getattr(System.ConsoleColor, fg)
+	sys.stdout.write(message)
+	sys.stdout.write(end)
 	System.Console.ResetColor()
 
 def dump_cfg():
-	main_module = get_main_module()
+	build_module = get_main_module()
 
-	pad = max([len(x) for x in main_module.cfg])
+	names = [n for n in dir(build_module) if not n.startswith('_') and type(getattr(build_module, n)) in [str, int, bool]]
 
-	for k, v in main_module.cfg.iteritems():
-		System.Console.ForegroundColor = System.ConsoleColor.White
-		sys.stdout.write(k.rjust(pad) + ': ')
-		System.Console.ResetColor()
-		sys.stdout.write(str(v))
-		sys.stdout.write('\n')
+	pad = max([len(x) for x in names])
+
+	for name in names:
+		cprint(name.rjust(pad) + ': ', 'White', '')
+		print(getattr(build_module, name))
+
+def load_module_file(module_path):
+	module_path = os.path.realpath(module_path)
+
+	module_dir, module_file = os.path.split(module_path)
+	module_name = os.path.splitext(module_file)[0]
+
+	sys.path.insert(0, module_dir)
+
+	return __import__(module_name)
