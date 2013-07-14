@@ -4,18 +4,16 @@ framework_version = '4.0.30319'
 build_configuration = 'Release'
 build_platform = 'Any CPU'
 project_version = '3.0.0'
-prerelease_tag = 'b'
-build_number = '0'
+prerelease = True
+build_number = 0
 nuget_package_source = 'https://nuget.org/api/v2/'
 project_name = 'MyProject'
 
-def init():
-	buildutil.dump_cfg()
-
 def nuget_version():
-	if prerelease_tag:
-		return project_version + '-' + prerelease_tag + build_number.rjust(6, '0')
-	return project_version
+	ret = project_version
+	if prerelease:
+		ret += '-b%06d' % build_number
+	return ret
 
 def bjoin(*args):
 	base_path = os.path.dirname(os.path.realpath(__file__))

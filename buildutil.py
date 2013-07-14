@@ -7,6 +7,8 @@ def main():
 
 		tasks = parse_args(build_module, args)
 
+		dump_cfg()
+
 		for task in tasks:
 			cprint('Executing %s' % task, 'Cyan')
 			task_fn = getattr(build_module, task)
@@ -27,7 +29,8 @@ def parse_args(build_module, args):
 		if arg.startswith('--'):
 			arg_name = arg[2:]
 		elif arg_name:
-			setattr(build_module, arg_name, arg)
+			arg_type = type(getattr(build_module, arg_name, ''))
+			setattr(build_module, arg_name, arg_type(arg))
 			arg_name = None
 		else:
 			tasks.append(arg)
