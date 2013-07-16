@@ -8,15 +8,17 @@ prerelease = True
 build_number = 0
 nuget_package_source = 'https://nuget.org/api/v2/'
 project_name = 'MyProject'
+project_authors = 'myself'
+project_description = 'MyProject'
 
 def nuget_version():
-	ret = project_version
+  ret = project_version
 	if prerelease:
 		ret += '-b%06d' % build_number
 	return ret
 
 def bjoin(*args):
-	base_path = os.path.dirname(os.path.realpath(__file__))
+	base_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 	return os.path.join(base_path, *args)
 
 def install_deps():
@@ -67,7 +69,8 @@ def test():
 	subprocess.check_call(nunit_command)
 
 def pack():
-	if os.path.exists(bjoin('out')): shutil.rmtree(bjoin('out'))
+	out_dir = bjoin('out')
+	if os.path.exists(out_dir): shutil.rmtree(out_dir)
 
 	shutil.copytree(bjoin('src', project_name, 'bin', build_configuration), bjoin('out', 'nupkg', 'lib', 'net40'))
 
@@ -77,22 +80,22 @@ def pack():
 	<metadata>
 		<id>{id}</id>
 		<version>{version}</version>
-		<authors></authors>
-		<owners></owners>
-		<description></description>
+		<authors>{authors}</authors>
+		<owners>{authors}</owners>
+		<description>{description}</description>
 	</metadata>
 </package>
-	""".format(id=project_name, version=nuget_version())
+	""".format(id=project_name, version=nuget_version(), authors=project_authors, description=project_description)
 
 	nuspec_file = bjoin('out', 'nupkg', 'Package.nuspec')
 
 	with open(nuspec_file, 'w') as f:
 		f.write(nuspec_content)
 
-	subprocess.check_call([bjoin('tools', 'NuGet.exe'), 'pack', nuspec_file, '-Symbols', '-OutputDirectory', bjoin('out')])
+	subprocess.check_call([bjoin('tools', 'NuGet.exe'), 'pack', nuspec_file, '-Symbols', '-OutputDirectory', out_dir])
 
 def publish():
-	nupkg_file = os.path.join(bjoin('out'), 'DaqFiles.' + nuget_version + '.nupkg')
+	nupkg_file = bjoin('out', project_name + '.' + nuget_version() + '.nupkg')
 	subprocess.check_call([bjoin('tools', 'NuGet.exe'), 'push', nupkg_file, '-Source', nuget_package_source])
 
 if __name__ == '__main__':
