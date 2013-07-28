@@ -38,6 +38,17 @@ class TestBuildutil(unittest.TestCase):
 		self.assertEqual(self.module.int_option, 456)
 		self.assertTrue(self.module.bool_option)
 
+	def test_should_expand_list_of_tasks(self):
+		self.module.group1 = ['task2', 'task3']
+		tasks = buildutil.parse_args(self.module, ['task1', 'group1', 'task4'])
+
+		self.assertEqual(tasks, ['task1', 'task2', 'task3', 'task4'])
+
+	# def test_return_dedault_task_when_no_task_passed(self):
+	# 	self.module.default = ['task2', 'task3']
+	# 	tasks = buildutil.parse_args(self.module, [])
+	# 	self.assertEqual(tasks, ['task2', 'task3'])
+
 	def test_should_dump_cfg(self):
 		self.module.string_option = 'a value'
 		self.module.int_option = 123
