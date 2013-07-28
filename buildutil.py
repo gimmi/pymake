@@ -1,4 +1,4 @@
-import inspect, sys, traceback, System
+import inspect, sys, traceback
 
 def main():
 	build_module = __import__('__main__')
@@ -47,6 +47,7 @@ def dump_cfg(build_module, cprint):
 		cprint(str(getattr(build_module, name)))
 
 def ironpython_cprint(message, fg='Gray', end='\n'):
+	import System
 	System.Console.ForegroundColor = getattr(System.ConsoleColor, fg)
 	sys.stdout.write(message)
 	sys.stdout.write(end)
