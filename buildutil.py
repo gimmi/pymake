@@ -1,26 +1,24 @@
 import inspect, sys, traceback, System
 
 def main():
-	try:
-		build_module = get_main_module()
-		args = sys.argv[1:]
+	build_module = __import__('__main__')
+	args = sys.argv[1:]
+	run(build_module, args, ironpython_cprint)
 
+def run(build_module, args, cprint):
+	try:
 		tasks = parse_args(build_module, args)
 
-		dump_cfg()
+		dump_cfg(build_module, cprint)
 
 		for task in tasks:
 			cprint('Executing %s' % task, 'Cyan')
 			task_fn = getattr(build_module, task)
 			task_fn()
-		cprint('\nBuild Succeeded!', 'Green')
+		cprint('Build Succeeded!', 'Green')
 	except:
-		cprint('\nBuild Failed!\n', 'Red')
-		print(traceback.format_exc())
-		sys.exit(1)
-
-def get_main_module():
-	return __import__('__main__')
+		cprint('Build Failed!', 'Red')
+		raise
 
 def parse_args(build_module, args):
 	arg_name = None
@@ -36,19 +34,20 @@ def parse_args(build_module, args):
 			tasks.append(arg)
 	return tasks
 
-def cprint(message, fg, end='\n'):
-	System.Console.ForegroundColor = getattr(System.ConsoleColor, fg)
-	sys.stdout.write(message)
-	sys.stdout.write(end)
-	System.Console.ResetColor()
-
-def dump_cfg():
-	build_module = get_main_module()
-
+def dump_cfg(build_module, cprint):
 	names = [n for n in dir(build_module) if not n.startswith('_') and type(getattr(build_module, n)) in [str, int, bool]]
+
+	if not names:
+		return
 
 	pad = max([len(x) for x in names])
 
 	for name in names:
 		cprint(name.rjust(pad) + ': ', 'White', '')
-		print(getattr(build_module, name))
+		cprint(str(getattr(build_module, name)))
+
+def ironpython_cprint(message, fg='Gray', end='\n'):
+	System.Console.ForegroundColor = getattr(System.ConsoleColor, fg)
+	sys.stdout.write(message)
+	sys.stdout.write(end)
+	System.Console.ResetColor()
