@@ -12,7 +12,7 @@ project_authors = 'myself'
 project_description = 'MyProject'
 
 def nuget_version():
-  ret = project_version
+	ret = project_version
 	if prerelease:
 		ret += '-b%06d' % build_number
 	return ret

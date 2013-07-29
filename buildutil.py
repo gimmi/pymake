@@ -1,7 +1,7 @@
 import sys
 
 def main():
-  build_module = __import__('__main__')
+	build_module = __import__('__main__')
 	args = sys.argv[1:]
 	run(build_module, args, ironpython_cprint)
 
