@@ -1,7 +1,7 @@
 import sys
 
 def main():
-	build_module = __import__('__main__')
+  build_module = __import__('__main__')
 	args = sys.argv[1:]
 	run(build_module, args, ironpython_cprint)
 
@@ -32,6 +32,9 @@ def parse_args(build_module, args):
 			arg_name = None
 		else:
 			add_task(build_module, tasks, arg)
+
+	if not tasks:
+		add_task(build_module, tasks, 'default')
 
 	return tasks
 

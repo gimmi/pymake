@@ -3,7 +3,7 @@
 import unittest, buildutil
 
 class TestModule:
-	pass
+  pass
 
 class TestBuildutil(unittest.TestCase):
 	def setUp(self):
@@ -44,10 +44,10 @@ class TestBuildutil(unittest.TestCase):
 
 		self.assertEqual(tasks, ['task1', 'task2', 'task3', 'task4'])
 
-	# def test_return_dedault_task_when_no_task_passed(self):
-	# 	self.module.default = ['task2', 'task3']
-	# 	tasks = buildutil.parse_args(self.module, [])
-	# 	self.assertEqual(tasks, ['task2', 'task3'])
+	def test_return_default_task_when_no_task_passed(self):
+		self.module.default = ['task2', 'task3']
+		tasks = buildutil.parse_args(self.module, [])
+		self.assertEqual(tasks, ['task2', 'task3'])
 
 	def test_should_dump_cfg(self):
 		self.module.string_option = 'a value'
