@@ -64,3 +64,17 @@ def ironpython_cprint(message, fg='Gray', end='\n'):
 	sys.stdout.write(message)
 	sys.stdout.write(end)
 	System.Console.ResetColor()
+
+if __name__ == '__main__':
+	import os, importlib
+
+	build_path = os.path.abspath(sys.argv[1])
+	build_args = sys.argv[2:]
+	build_dir = os.path.dirname(build_path)
+	build_file = os.path.basename(build_path)
+	build_module_name, build_ext = os.path.splitext(build_file)
+
+	sys.path.insert(0, build_dir)
+	build_module = importlib.import_module(build_module_name)
+
+	run(build_module, build_args, ironpython_cprint)
