@@ -20,26 +20,30 @@ class TestBuildutil(unittest.TestCase):
 		return [x for x in out if x]
 
 	def test_should_parse_args(self):
+		self.module.string_option = 'existing value'
 		self.module.int_option = 123
 		self.module.false_bool_option = False
 		self.module.true_bool_option = False
 
 		tasks = buildutil.parse_args(self.module, [
 			't1', 
-			'--string_option', 'string_value', 
+			'--undefined_string_option', 'string_value', 
 			't2', 
 			'--int_option', '456', 
 			't3',
 			'--false_bool_option', 'true',
 			't4',
-			'--true_bool_option', 'false'
+			'--true_bool_option', 'false',
+			't5',
+			'--string_option', 'new value'
 		])
 
-		self.assertEqual(tasks, ['t1', 't2', 't3', 't4'])
-		self.assertEqual(self.module.string_option, 'string_value')
+		self.assertEqual(tasks, ['t1', 't2', 't3', 't4', 't5'])
+		self.assertEqual(self.module.undefined_string_option, 'string_value')
 		self.assertEqual(self.module.int_option, 456)
 		self.assertTrue(self.module.false_bool_option)
 		self.assertFalse(self.module.true_bool_option)
+		self.assertEqual(self.module.string_option, 'new value')
 
 	def test_should_expand_list_of_tasks(self):
 		self.module.group1 = ['task2', 'task3']
