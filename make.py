@@ -6,11 +6,6 @@ ARGUMENT_CONVERTERS = {
 	bool: lambda x: x.lower() in ['true', 't', 'y', 'yes', '1']
 }
 
-def main():
-	build_module = __import__('__main__')
-	args = sys.argv[1:]
-	run(build_module, args, ironpython_cprint)
-
 def run(build_module, args, cprint):
 	try:
 		task_names = parse_args(build_module, args)

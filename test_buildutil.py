@@ -1,11 +1,11 @@
 # ipy -m unittest discover
 
-import unittest, buildutil
+import unittest, make
 
 class TestModule:
   pass
 
-class TestBuildutil(unittest.TestCase):
+class TestMake(unittest.TestCase):
 	def setUp(self):
 		self.sut = range(10)
 		self.module = TestModule()
@@ -25,7 +25,7 @@ class TestBuildutil(unittest.TestCase):
 		self.module.false_bool_option = False
 		self.module.true_bool_option = False
 
-		tasks = buildutil.parse_args(self.module, [
+		tasks = make.parse_args(self.module, [
 			't1', 
 			'undefined_string_option=string_value', 
 			't2', 
@@ -49,13 +49,13 @@ class TestBuildutil(unittest.TestCase):
 
 	def test_should_expand_list_of_tasks(self):
 		self.module.group1 = ['task2', 'task3']
-		tasks = buildutil.parse_args(self.module, ['task1', 'group1', 'task4'])
+		tasks = make.parse_args(self.module, ['task1', 'group1', 'task4'])
 
 		self.assertEqual(tasks, ['task1', 'task2', 'task3', 'task4'])
 
 	def test_return_default_task_when_no_task_passed(self):
 		self.module.default = ['task2', 'task3']
-		tasks = buildutil.parse_args(self.module, [])
+		tasks = make.parse_args(self.module, [])
 		self.assertEqual(tasks, ['task2', 'task3'])
 
 	def test_should_dump_cfg(self):
@@ -64,7 +64,7 @@ class TestBuildutil(unittest.TestCase):
 		self.module.bool_option = False
 		self.module._private_option = 'secret'
 
-		buildutil.dump_cfg(self.module, self.fake_cprint)
+		make.dump_cfg(self.module, self.fake_cprint)
 
 		self.assertEqual(self.get_out_lines(), [
 			'  bool_option: False',
@@ -73,7 +73,7 @@ class TestBuildutil(unittest.TestCase):
 		])
 
 	def test_should_dump_empty_cfg(self):
-		buildutil.dump_cfg(self.module, self.fake_cprint)
+		make.dump_cfg(self.module, self.fake_cprint)
 		self.assertEqual(self.get_out_lines(), [])
 
 	def test_should_execute_normally(self):
@@ -82,7 +82,7 @@ class TestBuildutil(unittest.TestCase):
 		self.module.task1 = lambda: executed_tasks.append('task1')
 		self.module.task2 = lambda: executed_tasks.append('task2')
 
-		buildutil.run(self.module, ['task1', 'task2', 'o1=v1', 'o2=v2'], self.fake_cprint)
+		make.run(self.module, ['task1', 'task2', 'o1=v1', 'o2=v2'], self.fake_cprint)
 
 		self.assertEqual(executed_tasks, ['task1', 'task2'])
 		self.assertEqual('v1', self.module.o1)
@@ -103,7 +103,7 @@ class TestBuildutil(unittest.TestCase):
 		self.module.task1 = task1
 
 		with self.assertRaises(Exception) as cm:
-			buildutil.run(self.module, ['task1'], self.fake_cprint)
+			make.run(self.module, ['task1'], self.fake_cprint)
 
 		self.assertEqual(cm.exception.message, 'AHHH!!')
 
