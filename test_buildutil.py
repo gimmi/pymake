@@ -21,7 +21,8 @@ class TestBuildutil(unittest.TestCase):
 
 	def test_should_parse_args(self):
 		self.module.int_option = 123
-		self.module.bool_option = False
+		self.module.false_bool_option = False
+		self.module.true_bool_option = False
 
 		tasks = buildutil.parse_args(self.module, [
 			't1', 
@@ -29,14 +30,16 @@ class TestBuildutil(unittest.TestCase):
 			't2', 
 			'--int_option', '456', 
 			't3',
-			'--bool_option', 't',
-			't4'
+			'--false_bool_option', 'true',
+			't4',
+			'--true_bool_option', 'false'
 		])
 
 		self.assertEqual(tasks, ['t1', 't2', 't3', 't4'])
 		self.assertEqual(self.module.string_option, 'string_value')
 		self.assertEqual(self.module.int_option, 456)
-		self.assertTrue(self.module.bool_option)
+		self.assertTrue(self.module.false_bool_option)
+		self.assertFalse(self.module.true_bool_option)
 
 	def test_should_expand_list_of_tasks(self):
 		self.module.group1 = ['task2', 'task3']

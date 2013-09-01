@@ -1,5 +1,11 @@
 import sys
 
+ARGUMENT_CONVERTERS = {
+	str: lambda x: x,
+	int: lambda x: int(x),
+	bool: lambda x: x.lower() in ['true', 't', 'y', 'yes', '1']
+}
+
 def main():
 	build_module = __import__('__main__')
 	args = sys.argv[1:]
@@ -28,7 +34,8 @@ def parse_args(build_module, args):
 			arg_name = arg[2:]
 		elif arg_name:
 			arg_type = type(getattr(build_module, arg_name, ''))
-			setattr(build_module, arg_name, arg_type(arg))
+			arg_convrter = ARGUMENT_CONVERTERS[arg_type]
+			setattr(build_module, arg_name, arg_convrter(arg))
 			arg_name = None
 		else:
 			add_task(build_module, tasks, arg)
@@ -47,7 +54,7 @@ def add_task(build_module, tasks, task_name):
 		tasks.append(task_name)
 
 def dump_cfg(build_module, cprint):
-	names = [n for n in dir(build_module) if not n.startswith('_') and type(getattr(build_module, n)) in [str, int, bool]]
+	names = [n for n in dir(build_module) if not n.startswith('_') and type(getattr(build_module, n)) in ARGUMENT_CONVERTERS]
 
 	if not names:
 		return
