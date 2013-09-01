@@ -1,4 +1,4 @@
-import sys
+import sys, re
 
 ARGUMENT_CONVERTERS = {
 	str: lambda x: x,
@@ -27,18 +27,14 @@ def run(build_module, args, cprint):
 		raise
 
 def parse_args(build_module, args):
-	arg_name = None
 	tasks = []
-	for arg in args:
-		if arg.startswith('--'):
-			arg_name = arg[2:]
-		elif arg_name:
-			arg_type = type(getattr(build_module, arg_name, ''))
+	for arg in [re.split('\s*=\s*', x, 1) for x in args]:
+		if len(arg) == 2:
+			arg_type = type(getattr(build_module, arg[0], ''))
 			arg_convrter = ARGUMENT_CONVERTERS[arg_type]
-			setattr(build_module, arg_name, arg_convrter(arg))
-			arg_name = None
+			setattr(build_module, arg[0], arg_convrter(arg[1]))
 		else:
-			add_task(build_module, tasks, arg)
+			add_task(build_module, tasks, arg[0])
 
 	if not tasks:
 		add_task(build_module, tasks, 'default')

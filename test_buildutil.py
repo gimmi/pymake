@@ -27,15 +27,16 @@ class TestBuildutil(unittest.TestCase):
 
 		tasks = buildutil.parse_args(self.module, [
 			't1', 
-			'--undefined_string_option', 'string_value', 
+			'undefined_string_option=string_value', 
 			't2', 
-			'--int_option', '456', 
+			'int_option=456', 
 			't3',
-			'--false_bool_option', 'true',
+			'false_bool_option=true',
 			't4',
-			'--true_bool_option', 'false',
+			'true_bool_option=false',
 			't5',
-			'--string_option', 'new value'
+			'string_option=new value',
+			'string_option_with_equal = this value has = sign in it'
 		])
 
 		self.assertEqual(tasks, ['t1', 't2', 't3', 't4', 't5'])
@@ -44,6 +45,7 @@ class TestBuildutil(unittest.TestCase):
 		self.assertTrue(self.module.false_bool_option)
 		self.assertFalse(self.module.true_bool_option)
 		self.assertEqual(self.module.string_option, 'new value')
+		self.assertEqual(self.module.string_option_with_equal, 'this value has = sign in it')
 
 	def test_should_expand_list_of_tasks(self):
 		self.module.group1 = ['task2', 'task3']
@@ -80,7 +82,7 @@ class TestBuildutil(unittest.TestCase):
 		self.module.task1 = lambda: executed_tasks.append('task1')
 		self.module.task2 = lambda: executed_tasks.append('task2')
 
-		buildutil.run(self.module, ['task1', 'task2', '--o1', 'v1', '--o2', 'v2'], self.fake_cprint)
+		buildutil.run(self.module, ['task1', 'task2', 'o1=v1', 'o2=v2'], self.fake_cprint)
 
 		self.assertEqual(executed_tasks, ['task1', 'task2'])
 		self.assertEqual('v1', self.module.o1)
