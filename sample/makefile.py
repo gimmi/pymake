@@ -1,5 +1,3 @@
-# ipy -tt buildutil.py sample_dir\sample.py bool_option=True "int_option = 456" string_option="changed value"
-
 string_option = 'default value'
 int_option = 123
 bool_option = False
