@@ -1,6 +1,6 @@
 # ipy -m unittest discover
 
-import unittest, make
+import unittest, sys, make, traceback
 
 class TestModule:
   pass
@@ -111,3 +111,25 @@ class TestMake(unittest.TestCase):
 			'Executing task1',
 			'Build Failed!',
 		])
+
+	def test_should_keep_exception_traceback(self):
+		def task3():
+			raise Exception('ahhh')
+
+		def task2():
+			task3()
+
+		def task1():
+			task2()
+
+		self.module.task3 = task3		
+		self.module.task2 = task2		
+		self.module.task1 = task1
+
+		try:
+			make.run(self.module, ['task1'], self.fake_cprint)
+			self.fail()
+		except:
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			methods = [function_name for filename, line_number, function_name, text in traceback.extract_tb(exc_traceback)]
+			self.assertEqual(methods, ['test_should_keep_exception_traceback', 'run', 'task1', 'task2', 'task3'])

@@ -7,14 +7,19 @@ ARGUMENT_CONVERTERS = {
 }
 
 def run(build_module, args, cprint):
-	task_names = parse_args(build_module, args)
+	try:
+		task_names = parse_args(build_module, args)
 
-	dump_cfg(build_module, cprint)
+		dump_cfg(build_module, cprint)
 
-	for task_name in task_names:
-		cprint('Executing %s' % task_name, 'Cyan')
-		task = getattr(build_module, task_name)
-		task()
+		for task_name in task_names:
+			cprint('Executing %s' % task_name, 'Cyan')
+			task = getattr(build_module, task_name)
+			task()
+		cprint('Build Succeeded!', 'Green')
+	except:
+		cprint('Build Failed!', 'Red')
+		raise
 
 def parse_args(build_module, args):
 	tasks = []
@@ -73,8 +78,5 @@ if __name__ == '__main__':
 	try:
 		run(build_module, build_args, ironpython_cprint)
 	except:
-		ironpython_cprint('Build Failed!', 'Red')
 		traceback.print_exc()
 		sys.exit(1)
-
-	ironpython_cprint('Build Succeeded!', 'Green')
