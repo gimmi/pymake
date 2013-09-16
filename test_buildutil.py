@@ -93,7 +93,7 @@ class TestMake(unittest.TestCase):
 			'o2: v2',
 			'Executing task1',
 			'Executing task2',
-			'Build Succeeded!',
+			'Make Succeeded!',
 		])
 
 	def test_should_fail_execution(self):
@@ -109,7 +109,7 @@ class TestMake(unittest.TestCase):
 
 		self.assertEqual(self.get_out_lines(), [
 			'Executing task1',
-			'Build Failed!',
+			'Make Failed!',
 		])
 
 	def test_should_keep_exception_traceback(self):
