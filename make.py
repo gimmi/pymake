@@ -7,19 +7,14 @@ ARGUMENT_CONVERTERS = {
 }
 
 def run(build_module, args, cprint):
-	try:
-		task_names = parse_args(build_module, args)
+	task_names = parse_args(build_module, args)
 
-		dump_cfg(build_module, cprint)
+	dump_cfg(build_module, cprint)
 
-		for task_name in task_names:
-			cprint('Executing %s' % task_name, 'Cyan')
-			task = getattr(build_module, task_name)
-			task()
-		cprint('Build Succeeded!', 'Green')
-	except:
-		cprint('Build Failed!', 'Red')
-		raise
+	for task_name in task_names:
+		cprint('Executing %s' % task_name, 'Cyan')
+		task = getattr(build_module, task_name)
+		task()
 
 def parse_args(build_module, args):
 	tasks = []
@@ -64,7 +59,7 @@ def ironpython_cprint(message, fg='Gray', end='\n'):
 	System.Console.ResetColor()
 
 if __name__ == '__main__':
-	import os, importlib
+	import os, importlib, traceback
 
 	build_path = os.path.abspath(sys.argv[1])
 	build_args = sys.argv[2:]
@@ -75,4 +70,11 @@ if __name__ == '__main__':
 	sys.path.insert(0, build_dir)
 	build_module = importlib.import_module(build_module_name)
 
-	run(build_module, build_args, ironpython_cprint)
+	try:
+		run(build_module, build_args, ironpython_cprint)
+		ironpython_cprint('Build Succeeded!', 'Green')
+		sys.exit(0)
+	except:
+		ironpython_cprint('Build Failed!', 'Red')
+		traceback.print_exc()
+		sys.exit(1)
