@@ -16,9 +16,9 @@ def run(build_module, args, cprint):
 			cprint('Executing %s' % task_name, 'Cyan')
 			task = getattr(build_module, task_name)
 			task()
-		cprint('Build Succeeded!', 'Green')
+		cprint('Make Succeeded!', 'Green')
 	except:
-		cprint('Build Failed!', 'Red')
+		cprint('Make Failed!', 'Red')
 		raise
 
 def parse_args(build_module, args):
