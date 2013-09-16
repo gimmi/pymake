@@ -72,9 +72,9 @@ if __name__ == '__main__':
 
 	try:
 		run(build_module, build_args, ironpython_cprint)
-		ironpython_cprint('Build Succeeded!', 'Green')
-		sys.exit(0)
 	except:
 		ironpython_cprint('Build Failed!', 'Red')
 		traceback.print_exc()
 		sys.exit(1)
+
+	ironpython_cprint('Build Succeeded!', 'Green')
