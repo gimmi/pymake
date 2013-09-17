@@ -113,8 +113,10 @@ class TestMake(unittest.TestCase):
 		])
 
 	def test_should_keep_exception_traceback(self):
+		# https://ironpython.codeplex.com/workitem/34386
+
 		def task3():
-			raise Exception('ahhh')
+			return (1, 2) + [3, 4] # The unexpected behavior happen with this TypeError
 
 		def task2():
 			task3()
