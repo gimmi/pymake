@@ -37,6 +37,7 @@ def nunit(*dll_globs):
 		os.path.join(base_dir, 'NUnit.Runners.' + nunit_version, 'tools', 'nunit-console.exe'), 
 		'/nologo', 
 		'/framework=' + framework_version,
+		'/noshadow',
 		'/xml=' + report_path
 	]
 	for dll_glob in dll_globs:
