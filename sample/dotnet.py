@@ -165,7 +165,7 @@ def sql_migrator(**kwargs):
     subprocess.check_call(sqlmigrator_command)
 
 
-def git_tfs_release_notes(repo_path, current_version):
+def git_tfs_release_notes(repo_path):
     libgit2sharp_version = '0.14.1.0'
     semver_version = '1.0.5'
 
@@ -186,7 +186,9 @@ def git_tfs_release_notes(repo_path, current_version):
             for match in re.finditer(r'#(\d+)', commit.Message):
                 workitem_ids.add(int(match.group(1)))
 
-        rows = ['%s => %s' % (latest_version_tag.Name, current_version)]
+        rows = []
+        if latest_version_tag:
+            rows.append('Since %s' % latest_version_tag.Name)
         rows.extend(['* %d %s' % (x, tfs_get_workitem_title(x)) for x in workitem_ids])
         return '\n'.join(rows)
 
