@@ -1,12 +1,16 @@
 import os
 import glob
 import subprocess
+import re
+import clr
+import System
 
 framework_version = '4.0.30319'
 nunit_version = '2.6.2'
 nugetcheck_version = '0.1.8'
 sqlmigrator_version = '0.9.1'
 sqlserver_version = '110'
+tfs_uri = r'http://localhost:8080/tfs/DefaultCollection'
 
 base_dir = os.path.join(os.path.dirname(__file__))
 
@@ -139,7 +143,6 @@ def get_sqlserver_tools_dir():
 
 
 def sql_open_conn(conn_str):
-    import clr
     clr.AddReference('System.Data')
     import System.Data
 
@@ -160,3 +163,41 @@ def sql_migrator(**kwargs):
         sqlmigrator_command.append(v)
 
     subprocess.check_call(sqlmigrator_command)
+
+
+def git_tfs_release_notes(repo_path, current_version):
+    libgit2sharp_version = '0.14.1.0'
+    semver_version = '1.0.5'
+
+    nuget_install('LibGit2Sharp', '-Version', libgit2sharp_version, '-OutputDirectory', base_dir, '-Verbosity', 'quiet')
+    nuget_install('semver', '-Version', semver_version, '-OutputDirectory', base_dir, '-Verbosity', 'quiet')
+    clr.AddReferenceToFileAndPath(os.path.join(base_dir, 'LibGit2Sharp.' + libgit2sharp_version, 'lib', 'net35', 'LibGit2Sharp.dll'))
+    clr.AddReferenceToFileAndPath(os.path.join(base_dir, 'semver.' + semver_version, 'lib', 'net40', 'Semver.dll'))
+    import LibGit2Sharp
+    import Semver
+    with LibGit2Sharp.Repository(repo_path) as repo:
+        latest_version_tag = max(repo.Tags, key=lambda x: Semver.SemVersion.Parse(x.Name))
+        commit_filter = LibGit2Sharp.CommitFilter()
+        commit_filter.Since = repo.Branches['master']
+        commit_filter.Until = latest_version_tag
+
+        workitem_ids = set()
+        for commit in repo.Commits.QueryBy(commit_filter):
+            for match in re.finditer(r'#(\d+)', commit.Message):
+                workitem_ids.add(int(match.group(1)))
+
+        rows = ['%s => %s' % (latest_version_tag.Name, current_version)]
+        rows.extend(['* %d %s' % (x, tfs_get_workitem_title(x)) for x in workitem_ids])
+        return '\n'.join(rows)
+
+
+def tfs_get_workitem_title(id):
+    clr.AddReference('Microsoft.TeamFoundation.Client')
+    import Microsoft.TeamFoundation.Client
+    clr.AddReference('Microsoft.TeamFoundation.WorkItemTracking.Client')
+    import Microsoft.TeamFoundation.WorkItemTracking.Client
+
+    tfs = Microsoft.TeamFoundation.Client.TfsTeamProjectCollectionFactory.GetTeamProjectCollection(System.Uri(tfs_uri))
+    item_store = tfs.GetService[Microsoft.TeamFoundation.WorkItemTracking.Client.WorkItemStore]()
+    work_item = item_store.GetWorkItem(id)
+    return work_item.Title
