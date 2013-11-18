@@ -176,7 +176,8 @@ def git_tfs_release_notes(repo_path):
     import LibGit2Sharp
     import Semver
     with LibGit2Sharp.Repository(repo_path) as repo:
-        latest_version_tag = max(repo.Tags, key=lambda x: Semver.SemVersion.Parse(x.Name))
+        tags = list(repo.Tags)
+        latest_version_tag = max(tags, key=lambda x: Semver.SemVersion.Parse(x.Name)) if tags else None
         commit_filter = LibGit2Sharp.CommitFilter()
         commit_filter.Since = repo.Head
         commit_filter.Until = latest_version_tag
