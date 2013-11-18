@@ -178,7 +178,7 @@ def git_tfs_release_notes(repo_path):
     with LibGit2Sharp.Repository(repo_path) as repo:
         latest_version_tag = max(repo.Tags, key=lambda x: Semver.SemVersion.Parse(x.Name))
         commit_filter = LibGit2Sharp.CommitFilter()
-        commit_filter.Since = repo.Branches['master']
+        commit_filter.Since = repo.Head
         commit_filter.Until = latest_version_tag
 
         workitem_ids = set()
