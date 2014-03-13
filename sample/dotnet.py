@@ -45,11 +45,12 @@ def nuget_check(sln_path):
     subprocess.check_call([os.path.join(base_dir, 'NuGetCheck.' + nugetcheck_version, 'tools', 'NuGetCheck.exe'), 'PackageVersionMismatch', sln_path])
 
 
-def nunit(*dll_globs):
+def nunit(*dll_globs, **kwargs):
     report_path = os.path.join(base_dir, 'TestResult.xml')
     nuget_install('NUnit.Runners', '-Version', nunit_version, '-OutputDirectory', base_dir)
+    exe = 'nunit-console-x86.exe' if kwargs.get('x86') else 'nunit-console.exe'
     nunit_command = [
-        os.path.join(base_dir, 'NUnit.Runners.' + nunit_version, 'tools', 'nunit-console.exe'),
+        os.path.join(base_dir, 'NUnit.Runners.' + nunit_version, 'tools', exe),
         '/nologo',
         '/framework=' + framework_version,
         '/noshadow',
