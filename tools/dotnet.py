@@ -212,3 +212,29 @@ def run_phantom_jasmine(test_html_path):
 
     nuget_install('PhantomJS', '-Version', phantomjs_version, '-OutputDirectory', base_dir, '-Verbosity', 'quiet')
     subprocess.check_call([os.path.join(base_dir, 'PhantomJS.' + phantomjs_version, 'tools', 'phantomjs', 'phantomjs.exe'), os.path.join(base_dir, 'run-phantomjs-jasmine.js'), test_html_path])
+
+
+def wix_candle_light(wsx_path):
+    nuget_install('WiX.Toolset', '-Version', wix_version, '-OutputDirectory', base_dir)
+
+    wsx_dir = os.path.dirname(wsx_path)
+    wsx_filename = os.path.splitext(wsx_path)[0]
+
+    wixobj_path = os.path.join(wsx_dir, wsx_filename + '.wixobj')
+    subprocess.check_call([
+        os.path.join(base_dir, 'WiX.Toolset.' + wix_version, 'tools', 'wix', 'candle.exe'),
+        '-pedantic',
+        '-v',
+        '-ext', 'WixUIExtension',
+        wsx_path,
+        '-out', wixobj_path
+    ])
+
+    subprocess.check_call([
+        os.path.join(base_dir, 'WiX.Toolset.' + wix_version, 'tools', 'wix', 'light.exe'),
+        '-pedantic',
+        '-v',
+        '-ext', 'WixUIExtension',
+        wixobj_path,
+        '-out', os.path.join(wsx_dir, wsx_filename + '.msi')
+    ])
