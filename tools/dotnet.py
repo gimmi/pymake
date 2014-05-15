@@ -10,6 +10,7 @@ nunit_version = '2.6.2'
 nugetcheck_version = '0.1.8'
 sqlmigrator_version = '0.9.1'
 sqlserver_version = '110'
+wix_version = '3.8.1128.0'
 tfs_uri = r'http://localhost:8080/tfs/DefaultCollection'
 
 base_dir = os.path.join(os.path.dirname(__file__))
