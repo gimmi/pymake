@@ -96,6 +96,12 @@ def robocopy(src, dest):
         raise Exception('ROBOCOPY failed with exit code %s' % returncode)
 
 
+def robocopy2(*args):
+    returncode = subprocess.call(['robocopy.exe'] + list(args))
+    if returncode > 8:
+        raise Exception('ROBOCOPY failed with exit code %s' % returncode)
+
+
 def sql_query(conn_str, sql):
     rows = []
 
