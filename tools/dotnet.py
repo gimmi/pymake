@@ -6,6 +6,7 @@ import clr
 import System
 
 framework_version = '4.0.30319'
+msbuild_tools_version = '4.0' # http://blogs.msdn.com/b/visualstudio/archive/2013/07/24/msbuild-is-now-part-of-visual-studio.aspx
 nunit_version = '2.6.2'
 nugetcheck_version = '0.1.8'
 sqlmigrator_version = '0.9.1'
@@ -17,7 +18,8 @@ base_dir = os.path.join(os.path.dirname(__file__))
 
 
 def msbuild(project_path, *targets, **properties):
-    msbuild_path = os.path.join(os.environ['SystemRoot'], 'Microsoft.NET', 'Framework', 'v' + framework_version, 'MSBuild.exe')
+    msbuild_path = get_reg_value('HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\MSBuild\\ToolsVersions\\' + msbuild_tools_version, 'MSBuildToolsPath')
+    msbuild_path = os.path.join(msbuild_path, 'MSBuild.exe')
     call_args = [msbuild_path, project_path, '/verbosity:minimal', '/nologo']
     if targets:
         call_args.append('/t:' + ';'.join(targets))
